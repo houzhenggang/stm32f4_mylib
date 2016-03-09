@@ -14,7 +14,7 @@
 
 
 
-void ResetRCC()
+static void ResetRCC()
 {
 	//	Turn on the HSI
 	RCC->CR |= RCC_CR_HSION;

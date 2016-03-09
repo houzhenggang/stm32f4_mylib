@@ -1,7 +1,6 @@
 #include "TIM.h"
 #include "NEC_remote_controller.h"
 #include "GPIO.h"
-#include "EXTI.h"
 #include "stm32f4xx.h"
 #include "HD44780.h"
 #include "stm32f4xx_hal_gpio.h"
@@ -17,15 +16,18 @@ extern fifo_t  		remote_command_fifo;
 extern state_t		state;
 
 
-/** \brief This is the base of the NEC IR protocol decoding. The EXTI line generates an interrupt when the falling edge from the IR decoder comes.
+
+/**
+ *  \brief This is the base of the NEC IR protocol decoding. The EXTI line generates an interrupt when the falling edge from the IR decoder comes.
  *            After that we measure the time between two falling edges of signal and in result get a logical one or zero. The resulting byte is stored in \v decoded_command global variable.
  *
+ *			NOTE:  This function should be called in the proper EXTI IRQ Handler
  * \param
  * \param
  * \return
  *
  */
-void EXTI15_10_IRQHandler()
+void NEC_Receive_Execute()
 {
     // Clear the interrupt flag
     EXTI->PR |= EXTI_PR_PR1;
@@ -41,9 +43,9 @@ void EXTI15_10_IRQHandler()
         if(((NEC_transmitted_message&NEC_TRANSMISSION_COMMAND_MASK)&(NEC_transmitted_message&NEC_TRANSMISSION_INVERTED_COMMAND_MASK)) == 0)
         {
             //  As we can see in the bit order, the code is the second byte on the left
-            decoded_command = NEC_transmitted_message>>24;
+            decoded_command = (uint8_t)(NEC_transmitted_message>>24);
             //	Put the command in the fifo
-            uint8_t rev_val = Fifo_Put(&remote_command_fifo, decoded_command);
+            Fifo_Put(&remote_command_fifo, decoded_command);
 
             state = STATE_EXECUTE_USER_REQUESTS;
         }
@@ -61,7 +63,6 @@ void EXTI15_10_IRQHandler()
  */
 void NEC_Remote_Init()
 {
-
     //  Configure the chosen pin, on which the signal from IR decoder will arrive as an input
     GPIO_InputConfigure(NEC_GPIO_PORT, NEC_GPIO_PIN,gpio_speed_high, gpio_pupd_pull_up);
     //  Configure the Basic Timer (TIM6 or TIM7) in order to measure bit timings
@@ -81,7 +82,7 @@ void NEC_Remote_Init()
 inline uint32_t Get_Bit()
 {
     ending_edge_timer_counter = NEC_TIMERx->CNT;
-    uint16_t time_diff = (ending_edge_timer_counter - starting_edge_timer_counter)*NEC_TIMERx_PERIOD;
+    uint16_t time_diff = (uint16_t)((uint16_t)(ending_edge_timer_counter - starting_edge_timer_counter)*NEC_TIMERx_PERIOD);
     starting_edge_timer_counter = ending_edge_timer_counter;
     uint32_t temp;
     if(time_diff > NEC_TRANSMISSION_TIMEOUT)
@@ -123,7 +124,7 @@ int8_t Get_Last_Command()
 
     //  If the last code was received correctly
     if(check_if_correct == 0)
-        return ((uint8_t)decoded_command>>8); // return op_code
+        return ((int8_t)(decoded_command>>8)); // return op_code
     else
         return -1;  //  return an error
 }

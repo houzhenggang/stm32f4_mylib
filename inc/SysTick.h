@@ -19,6 +19,6 @@ extern volatile bool		systick_delay_completed;
 #define SYSTICK_US_TO_TICKS(x) 		(uint32_t)(x*0.000001/(1.0/SYSTICK_FREQ))
 
 void SysTick_Delay(uint32_t delay_us);
-void SysTick_Handler();
+void SysTick_Handler(void);
 
 #endif /* INC_SYSTICK_H_ */

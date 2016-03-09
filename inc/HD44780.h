@@ -40,7 +40,7 @@
 #define LCD_GOTO_COMMAND									(char)0b10000000
 
 
-void 			LCD_Config();
+void 			LCD_Config(void);
 void 			LCD_WriteData(char data);
 void 			LCD_WriteCommand(char command);
 void 			LCD_WriteText(char* text);

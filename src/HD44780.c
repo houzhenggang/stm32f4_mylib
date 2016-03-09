@@ -5,7 +5,7 @@
  *      Author: konrad
  */
 #include "HD44780.h"
-#include "stm32f407xx.h"
+#include "stm32f4xx.h"
 #include "GPIO.h"
 #include "TIM.h"
 #include "string.h"

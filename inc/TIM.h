@@ -39,7 +39,6 @@ extern uint8_t* 				data_ptr;
 extern uint8_t* 				empty_data_buf_ptr;
 
 
-void TIM7_IRQHandler();
 
 void TIM_Basic_DelayInitialize(TIM_TypeDef* TIM);
 void TIM_Basic_Continuous_Counting(TIM_TypeDef* TIM, uint16_t ARR_value);

@@ -38,7 +38,7 @@ typedef enum
 	dac_trigger_software
 }dac_trigger_source_e;
 
-void DAC_DeInit();
+void DAC_DeInit(void);
 void DAC_Init(uint8_t conv_trig_sel, dac_channels_conf_e channel_conf, bool output_buffer_used);
 void DAC_Put_Data_Single_8bit(uint8_t data);
 void DAC_Put_Data_Single_12bit_R(uint16_t data);

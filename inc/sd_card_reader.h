@@ -6,7 +6,7 @@
 #include "GPIO.h"
 #include "integer.h"
 #include "ff.h"
-
+#include <stdbool.h>
 
 /**
  * NOTE:	SD Cards get arguments in reversed order. The last byte send to them is received as the least important byte!
@@ -119,7 +119,6 @@ typedef struct
 	uint8_t			cc_error		:1;
 	uint8_t			card_ecc_failed	:1;
 	uint8_t			out_of_range	:1;
-	uint8_t;
 }sd_card_error_token_t;
 
 typedef union
@@ -172,10 +171,10 @@ FRESULT 	SD_Get_File_List(const TCHAR* dir_path);
 
 
 /***		LOW LEVEL API	***/
-bool 		SD_Check_If_Card_Present();
+bool 		SD_Check_If_Card_Present(void);
 uint32_t	SD_Send_Command(uint8_t command, uint8_t* argument_array);
-uint32_t	SD_Card_Init();
-uint16_t 	SD_Get_Block_Size();
+uint32_t	SD_Card_Init(void);
+uint16_t 	SD_Get_Block_Size(void);
 uint16_t 	SD_Read_Single_Block(DWORD sector_number, BYTE* data_buffer);
 
 #endif

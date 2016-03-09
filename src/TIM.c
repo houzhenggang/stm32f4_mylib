@@ -2,7 +2,7 @@
  * TIM.c
  *
  *  Created on: Nov 9, 2014
- *      Author: Ola
+ *      Author: Konrad Traczyk
  */
 
 #include "stm32f4xx.h"
@@ -10,80 +10,8 @@
 #include "RCC.h"
 #include "dac.h"
 #include "sd_card_reader.h"
-#include "wav.h"
-#include "NEC_remote_controller.h"
 
 volatile unsigned char 	TIM_delayFinished = 0;
-
-uint8_t* 				data_ptr;
-uint8_t* 				empty_data_buf_ptr;
-
-uint32_t 				samples = 0;
-extern state_t			state;
-extern state_t			prev_state;
-uint16_t left;
-uint16_t right;
-uint16_t index;
-FRESULT ret_val;
-void TIM7_IRQHandler()
-{
-	//	Clear the interrupt flag
-	TIM7->SR &= ~(TIM_SR_UIF);
-	//	Get the new sample
-
-	memcpy(&left, &sd_data_buffer[index % 512], sizeof(uint16_t));
-	memcpy(&right, &sd_data_buffer[(index % 512) + 2], sizeof(uint16_t));
-	left = (int16_t)left*0.25;
-	right = (int16_t)right*0.25;
-	//samples += (32768 << 16) + 32768;
-	left += 32768;
-	right += 32768;
-
-	samples = ((uint32_t)(left)<<16) + (uint32_t)right;
-
-	DAC_Put_Data_Dual_12bit_L(samples);
-
-	index += 4;
-	//	If next sample will wrap the sample array then change the buffer with samples
-	if(index % read_data_byte_counter == 0)
-	{
-		static buffer_index = 0;
-		if(buffer_index % 2 == 0)
-		{
-			data_ptr = sd_data_buffer;
-			empty_data_buf_ptr = sd_data_buffer_additional;
-		}
-		else
-		{
-			data_ptr = sd_data_buffer_additional;
-			empty_data_buf_ptr = sd_data_buffer;
-		}
-		index = 0;
-		if(wav_eof)
-		{
-			TIM_Stop(TIM7);
-			//ret_val = f_lseek(&sd_current_file, 0);
-			ret_val = f_close(&sd_current_file);
-			//ret_val = f_read(&sd_current_file, sd_data_buffer_additional, 44, &index);
-
-			wav_file_playing = false;
-			wav_file_chosen = false;
-
-			state = STATE_EXECUTE_USER_REQUESTS;
-
-
-			buffer_index = 0;
-		}
-		else
-		{
-			prev_state = state;
-			//	Change the state of device
-			state = STATE_READ_SAMPLES;
-		}
-		// Increment the buffer index which indicates which sample array is currently used and which is to be filled with samples
-		buffer_index++;
-	}
-}
 
 /**
  * 	This function only prepares the chosen Basic TIM t be used as a time counter.

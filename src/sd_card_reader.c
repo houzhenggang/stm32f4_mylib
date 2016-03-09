@@ -294,11 +294,11 @@ uint32_t SD_Card_Init()
 
 		command = CMD1;
 		//	Wyslij zadanie inicjalizacji
-		SPI_Send_Data_Only(CARD_READER_SPI, &command, 1);
+		SPI_Send_Data_Only(CARD_READER_SPI, (uint8_t*)&command, 1);
 		do
 		{
 			// Czekaj na wejscie w stan idle
-			SPI_Receive_Data_Only(CARD_READER_SPI, &r1_response, 1);
+			SPI_Receive_Data_Only(CARD_READER_SPI, (uint8_t*)&r1_response, 1);
 			counter++;
 		}while((r1_response.bitfields.idle_state != 0) && (counter<8));
 
@@ -343,7 +343,7 @@ uint16_t SD_Get_Block_Size()
 	SPI_Receive_Data_Only(CARD_READER_SPI, sd_card_csd_configuration_buffer, sizeof(sd_card_csd_configuration_buffer));
 
 	//	Get the CRC value
-	SPI_Receive_Data_Only(CARD_READER_SPI, &crc, sizeof(crc));
+	SPI_Receive_Data_Only(CARD_READER_SPI, (uint8_t*)&crc, sizeof(crc));
 	//	Get the block size information from the CSD register
 	uint16_t card_size = ((sd_card_csd_configuration_buffer[6] & 0x02)<<10) | (sd_card_csd_configuration_buffer[7] << 2 ) | ((sd_card_csd_configuration_buffer[8]&0xC)>>6);
 	uint8_t read_block_size  = sd_card_csd_configuration_buffer[5] & (uint8_t)0x0F;
@@ -401,6 +401,8 @@ uint16_t SD_Read_Single_Block(DWORD sector_number, BYTE* data_buffer)
 
 	//	Receive the data block and CRC (additional 2 bytes required to receive)
 	SPI_Receive_Data_Only(CARD_READER_SPI, data_buffer, 512);
+
+	return 0;
 }
 
 

@@ -14,7 +14,7 @@
 /**
  * \brief This function resets the DAC configuration to its default settings
  */
-void DAC_DeInit()
+void DAC_DeInit(void)
 {
 	DAC->CR = (uint32_t)0;
 }

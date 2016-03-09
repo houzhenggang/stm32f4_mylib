@@ -3,6 +3,7 @@
 
 #include "GPIO.h"
 #include "TIM.h"
+#include "EXTI.h"
 #include "stm32f4xx.h"
 //  NOTE:
 //      This three macros should be set before use:
@@ -47,10 +48,11 @@ typedef enum
 	STATE_WAIT
 }state_t;
 
-void NEC_Remote_Init();
-uint32_t Get_Bit();
-void EXTI1_IRQHandler();
-int8_t Get_Last_Command();
+void NEC_Remote_Init(void);
+void NEC_Receive_Execute(void);
+uint32_t Get_Bit(void);
+void EXTI1_IRQHandler(void);
+int8_t Get_Last_Command(void);
 
 
 #endif /* NEC_REMOTE_CONTROLLER_H_INCLUDED */

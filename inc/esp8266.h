@@ -10,7 +10,11 @@
 
 #include <string.h>
 #include <stdint-gcc.h>
+#include "stm32f4xx.h"
+#include "USART.h"
 
+
+#define ESP8266_USART_MODULE						USART2
 
 #define ESP_RESET									"AT+RST"
 #define ESP_CHECK_FIRMWARE_VERSION					"AT+GMR"
@@ -29,8 +33,26 @@
 #define ESP_SET_MULTIPLE_CONNECTIONS				"AT+CIPMUX"
 #define ESP_SET_AS_SERVER							"AT+CIPSERVER"
 #define ESP_SET_SERVER_TIMEOUT						"AT+CIPSTO"
+#define ESP_CHANGE_UART_CONFIG_CURRENT				"AT+UART_CUR"
+#define ESP_CHANGE_UART_CONFIG_DEFAULT				"AT+UART_DEF"
 
-#define ESP_GET_INQUIRY(command_macro)				strcat(command_macro, '?')
+#define ESP_UART_CONFIG_DATA_BITS_5						'5'
+#define ESP_UART_CONFIG_DATA_BITS_6						'6'
+#define ESP_UART_CONFIG_DATA_BITS_7						'7'
+#define ESP_UART_CONFIG_DATA_BITS_8						'8'
+
+#define ESP_UART_CONFIG_STOP_BITS_1						'1'
+#define ESP_UART_CONFIG_STOP_BITS_1_5					'2'
+#define ESP_UART_CONFIG_STOP_BITS_2						'3'
+
+#define ESP_UART_CONFIG_PARTITY_NO_PARITY				'0'
+#define ESP_UART_CONFIG_PARITY_ODD						'1'
+#define ESP_UART_CONFIG_PARITY_EVEN						'2'
+
+#define ESP_UART_CONFIG_FLOW_CONTROL_DISABLED			'0'
+#define ESP_UART_CONFIG_FLOW_CONTROL_RTS_ENABLED		'1'
+#define ESP_UART_CONFIG_FLOW_CONTROL_CTS_ENABLED		'2'
+#define ESP_UART_CONFIG_FLOW_CONTROL_RTS_CTS_ENABLED	'3'
 
 
 typedef enum
@@ -79,5 +101,11 @@ typedef struct
 	esp_server_mode_e	server_mode;
 	uint16_t			port_number;
 }esp_server_params_t;		/*< Structure connected with ESP_SET_AS_SERVER macro */
+
+error_e Esp_Init();
+error_e Esp_Reset();
+error_e Esp_Configure_Uart_Current(char* baudrate, uint8_t baudrate_size, char data_bits, char stop_bits, char parity, char flow_control);
+error_e Esp_Configure_Uart_Default(char* baudrate, uint8_t baudrate_size, char data_bits, char stop_bits, char parity, char flow_control);
+
 
 #endif /* ESP8266_H_ */

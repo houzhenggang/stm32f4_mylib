@@ -53,9 +53,9 @@ static error_e Esp_Form_Query(uint8_t* command, uint16_t command_size, bool comm
  * 			ERROR_NO_MEM - if command is statically allocated (on stack) it is internally copied in dynamic buffer. This retval informs that heap is out of memory
  *
  */
-static inline error_e Esp_Send_Command(uint8_t* command, uint16_t data_size, bool command_dyn_allocated, bool wait_till_tx_end)
+static inline error_e Esp_Send_Command(char* command, uint16_t data_size, bool command_dyn_allocated, bool wait_till_tx_end)
 {
-	return Uart_Send_Data(ESP8266_USART_MODULE, command, data_size, command_dyn_allocated, wait_till_tx_end);
+	return Uart_Send_Data(ESP8266_USART_MODULE, (uint8_t*)command, data_size, command_dyn_allocated, wait_till_tx_end);
 }
 
 /**
@@ -214,3 +214,147 @@ error_e Esp_Configure_Uart_Default(char* baudrate, uint8_t baudrate_size, char d
 
 	return ERROR_NO_MEM;
 }
+
+/**
+ * \brief This function sets the max power of transmission.
+ *
+ * \param power - char value in between [0; 82] in units of 0.25dBm
+ * \param power_size - number of bytes of power
+ *
+ * \return 	OP_SUCCESS
+ * 			ERROR_NO_MEM
+ */
+error_e	Esp_Set_Tx_Power(char* power, uint8_t power_size)
+{
+	uint8_t index = 0;
+	char* cmd = malloc(sizeof(ESP_SET_TX_POWER) + power_size + 2);
+	if(cmd)
+	{
+		memcpy(cmd, ESP_SET_TX_POWER, sizeof(ESP_SET_TX_POWER) - 1);
+		cmd[sizeof(ESP_SET_TX_POWER-1)] = '=';
+		memcpy(&cmd[sizeof(ESP_SET_TX_POWER)], power, power_size);
+		index = sizeof(ESP_SET_TX_POWER) + power_size;
+		cmd[index++] = power[0];
+		if(power_size > 1)
+		{
+			cmd[index] = power[1];
+		}
+		return Esp_Send_Command(cmd, sizeof(ESP_SET_TX_POWER) + power_size + 2, true, true);
+	}
+
+	return ERROR_NO_MEM;
+}
+
+/**
+ * \brief This function enables the command echo. It causes the ESP module to send back to the transmitter the command it received via UART interface
+ *
+ * \return 	OP_SUCCESS
+ * 			ERROR_NO_MEM
+ */
+error_e Esp_Command_Echo_Turn_On()
+{
+	return Esp_Send_Command_Without_Args(ESP_CMD_ECHO_ON, sizeof(ESP_CMD_ECHO_ON));
+}
+
+/**
+ * \brief This function disables the command echo.
+ *
+ * \return 	OP_SUCCESS
+ * 			ERROR_NO_MEM
+ */
+error_e Esp_Command_Echo_Turn_Off()
+{
+	return Esp_Send_Command_Without_Args(ESP_CMD_ECHO_OFF, sizeof(ESP_CMD_ECHO_OFF));
+}
+
+/**
+ * \brief This function restores the configuration saved in its flash memory
+ *
+ * \return 	OP_SUCCESS
+ * 			ERROR_NO_MEM
+ */
+error_e Esp_Factory_Reset()
+{
+	return Esp_Send_Command_Without_Args(ESP_FACTORY_RESET, sizeof(ESP_FACTORY_RESET));
+}
+
+/**
+ * \brief This function puts esp module in sleep mode or exits it
+ *
+ * \param sleep_mode
+ *
+ * \return	OP_SUCCESS,
+ * 			ERROR_NO_MEM
+ */
+error_e Esp_Sleep(esp_sleep_mode_e sleep_mode)
+{
+	uint8_t index = 0;
+	uint8_t* cmd = malloc(sizeof(ESP_SLEEP_MODE) + 3);
+	if(cmd)
+	{
+		memcpy(cmd, ESP_SLEEP_MODE, sizeof(ESP_SLEEP_MODE)-1);
+		index = sizeof(ESP_SLEEP_MODE)-1;
+		cmd[index++] = '=';
+		cmd[index++] = sleep_mode;
+		cmd[index++] = '\r';
+		cmd[index++] = '\n';
+
+		return Esp_Send_Command(cmd, index, true, true);
+	}
+	return ERROR_NO_MEM;
+}
+
+error_e Esp_Set_Wifi_Mode(esp_wifi_mode_e mode, esp_config_time_e config)
+{
+	char* cmd = malloc(sizeof(ESP_WIFI_MODE_CUR) + 3);
+	uint8_t index = 0;
+	if(cmd)
+	{
+		if(config == ESP_CONFIG_CURRENTLY)
+			strcpy(cmd, ESP_WIFI_MODE_CUR);
+		else
+			strcpy(cmd, ESP_WIFI_MODE_DEF);
+
+		index = sizeof(ESP_WIFI_MODE_CUR);
+		cmd[index++] = '=';
+		cmd[index++] = mode;
+		cmd[index++] = '\r';
+		cmd[index++] = '\n';
+
+		return Esp_Send_Command(cmd, sizeof(ESP_WIFI_MODE_CUR) + 3, true, true);
+	}
+
+	return ERROR_NO_MEM;
+}
+
+error_e Esp_Connect_To_AP(esp_ap_params_t access_point_params, esp_config_time_e config)
+{
+	char* cmd = malloc(sizeof(ESP_JOIN_AP_CUR) + access_point_params.pswd_size + access_point_params.ssid_size + 7);
+	uint8_t index = 0;
+	if(cmd)
+	{
+		if(config == ESP_CONFIG_CURRENTLY)
+			strcpy(cmd, ESP_JOIN_AP_CUR);
+		else
+			strcpy(cmd, ESP_JOIN_AP_DEF);
+
+		index = sizeof(ESP_JOIN_AP_CUR);
+		cmd[index++] = '=';
+		cmd[index++] = '\"';
+		strcpy(&cmd[index], access_point_params.ssid);
+		index += access_point_params.ssid_size;
+		cmd[index++] = '\"';
+		cmd[index++] = ',';
+		cmd[index++] = '\"';
+		strcpy(&cmd[index], access_point_params.pswd);
+		index += access_point_params.pswd_size;
+		cmd[index++] = '\"';
+		cmd[index++] = '\r';
+		cmd[index++] = '\n';
+
+		return Esp_Send_Command(cmd, sizeof(ESP_JOIN_AP_CUR) + 3, true, true);
+	}
+
+	return ERROR_NO_MEM;
+}
+
